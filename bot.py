@@ -65,7 +65,9 @@ async def say(ctx, *, message):
 
 @bot.command(name='kick', help='Kicks a player from the server')
 @commands.has_role(config.mod)
-async def kick(ctx, player: str, *, reason: str):
+async def kick(ctx, player: str, *, reason: str = None):
+    if not reason:
+        reason = "mf kicked without reason"
     res = mcr.command(f'kick {player} {reason}')
     # print(res)
     embed = embed_(ctx, "Kick", f"Kicked: by {str(ctx.author)}", res)
@@ -75,7 +77,9 @@ async def kick(ctx, player: str, *, reason: str):
 
 @bot.command(name='ban', help='Bans a player from the server')
 @commands.has_role(config.mod)
-async def ban(ctx, player: str, *, reason: str):
+async def ban(ctx, player: str, *, reason: str = None):
+    if not reason:
+        reason = "mf banned without reason"
     res = mcr.command(f'ban {player} {reason}')
     # print(res)
     embed = embed_(ctx, "Ban", f"Banned: by {str(ctx.author)}", res)
@@ -86,8 +90,8 @@ async def ban(ctx, player: str, *, reason: str):
 
 @bot.command(name='unban', help='Unbans a player from the server')
 @commands.has_role(config.mod)
-async def unban(ctx, player: str, *, reason: str):
-    res = mcr.command(f'pardon {player} {reason}')
+async def unban(ctx, player: str):
+    res = mcr.command(f'pardon {player}')
     # print(res)
     embed = embed_(ctx, "Unban", f"Unbanned: by {str(ctx.author)}", res)
     await ctx.reply(f'Unbanned! `{player}`')
@@ -115,14 +119,16 @@ async def deop(ctx, *, player: str):
     await log_channel.send(embed=embed)
 
 
-@bot.command(name='start', help='Starts the server')
-@commands.has_role(config.mod)
-async def start(ctx):
-    res = mcr.command('start')
-    await ctx.reply('Server starting...')
-    embed = embed_(ctx, "Start", f"Started: by {str(ctx.author)}", res)
-    log_channel = await bot.fetch_channel(config.log)
-    await log_channel.send(embed=embed)
+# flicko told won't work so I removed
+
+# @bot.command(name='start', help='Starts the server')
+# @commands.has_role(config.mod)
+# async def start(ctx):
+#     res = mcr.command('start')
+#     await ctx.reply('Server starting...')
+#     embed = embed_(ctx, "Start", f"Started: by {str(ctx.author)}", res)
+#     log_channel = await bot.fetch_channel(config.log)
+#     await log_channel.send(embed=embed)
 
 @bot.command(name='stop', help='Stops the server')
 @commands.has_role(config.mod)
@@ -134,15 +140,18 @@ async def stop(ctx):
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
-@bot.command(name='restart', help='Restarts the server')
-@commands.has_role(config.mod)
-async def restart(ctx):
-    res = mcr.command('restart')
-    # print(res)
-    await ctx.reply('Server restarting...')
-    embed = embed_(ctx, "Restart", f"Restarted: by {str(ctx.author)}", res)
-    log_channel = await bot.fetch_channel(config.log)
-    await log_channel.send(embed=embed)
+
+# flicko told won't work so I removed
+
+# @bot.command(name='restart', help='Restarts the server')
+# @commands.has_role(config.mod)
+# async def restart(ctx):
+#     res = mcr.command('restart')
+#     # print(res)
+#     await ctx.reply('Server restarting...')
+#     embed = embed_(ctx, "Restart", f"Restarted: by {str(ctx.author)}", res)
+#     log_channel = await bot.fetch_channel(config.log)
+#     await log_channel.send(embed=embed)
 
 
 @bot.command(name='whitelist', help='Whitelists a player')
@@ -155,6 +164,7 @@ async def whitelist(ctx, *, player: str):
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
+
 @bot.command(name='unlist',help='Remove someone fron whitelist')
 @commands.has_role(config.mod)
 async def whitelist_(ctx, *, player: str):
@@ -164,6 +174,7 @@ async def whitelist_(ctx, *, player: str):
     embed = embed_("Whitelist", f"Unlisted: by {str(ctx.author)}", res)
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
+
 
 @bot.command(name='custom', help='Runs a custom command')
 @commands.has_role(config.mod)
@@ -182,6 +193,7 @@ async def custom(ctx, *, command: str):
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
+
 @bot.command(name="ping", help="Returns bot latency")
 async def ping(ctx):
     await ctx.reply(
@@ -194,11 +206,12 @@ async def ping(ctx):
 
 @tasks.loop(minutes=5)
 async def status():
-    statues = ["Minecraft", "SkyHigh reach glory!", "Poopers pooping", "BruceDev is a god", "myself", "Better than CBV6 😏", "join: tcr.mcserver.us", "The CR SMP",
-            "Lava Walker", "Jesus Boots", "Lexionas74 vibing", "for Swas.py", "ports and boats", "Lexi killing Ghast", "Conch", "smp mods", "chuck claimers",
+    statues = ["Minecraft", "Poopers pooping", "NLuziaf is a god", "myself", "Better than CBV6 😏", "join: tcr.mcserver.us", "The CR SMP",
+            "Lava Walker", "Jesus Boots", "Lexionas74 vibing", "for Swas.py", "ports and boats", "Lexi killing Ghast", "Conch", "smp mods", "chunck claimers",
             "floating and goating", "Zombie", "deaths", "#JusticeForTCA", "v1.19.2", "myself simping for Bob", "Arthex without life", "Swas.py writing exams",
-            "G.O.A.T. 🐐", "Pixel Pioneers on farlands", "Saucee with hot sauce", "Shrines for magic", "Conch killing sheep", "goat horns", "TCR", "Skeleton",
-            "Ghast", "Wither", "Lexionas74 stealing dragon egg", "[Acquire Hardware]", "[Ice-Bucket Challenge]", "you!", "Useless TCR staffs", "#admin-nsfw"
+            "G.O.A.T. 🐐", "Pixel Pioneers on islands", "Saucee with hot sauce", "Shrines for magic", "Conch killing sheep", "goat horns", "TCR", "Skeleton",
+            "Ghast", "weak Withers", "Lexionas74 stealing dragon egg", "[Acquire Hardware]", "[Ice-Bucket Challenge]", "you!", "Useless TCR staffs", "#admin-nsfw",
+            "pooping in a sock", "resummon the dragon", "Dragon Egg(s)", "BobDotHot", "flicko afk-ing", "diamonds",
         ]
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=choice(statues)))
 
