@@ -1,2 +1,2 @@
 mcrcon==0.7.0
-pycord==2.4.0
+py-cord==2.4.0
