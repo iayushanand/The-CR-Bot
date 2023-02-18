@@ -215,7 +215,6 @@ async def status():
         ]
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=choice(statues)))
 
-async def main():
-    await bot.start(config.token)
+# Bob told to change to bot.run instead so I did
 
-asyncio.run(main())
+bot.run(config.token)
