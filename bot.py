@@ -67,7 +67,7 @@ async def say(ctx, *, message):
     res = mcr.command(f'say {message}')
     # print(res)
     res = embed_(ctx, "Server", f"Sent: `{message}` by {str(ctx.author)}", res)
-    await ctx.add_reaction('✅')
+    await ctx.message.add_reaction('✅')
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=res)
     
