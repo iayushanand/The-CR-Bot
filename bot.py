@@ -11,7 +11,7 @@ from discord import Embed
 import time
 from random import choice
 
-from datetime import datetime
+import datetime
 import psutil
 
 import os
