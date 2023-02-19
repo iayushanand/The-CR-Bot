@@ -243,7 +243,7 @@ async def status(ctx: commands.Context):
     disk_used = psutil.disk_usage('/').used
     disk_free = psutil.disk_usage('/').free
     process = psutil.Process(os.getpid())
-    python_version = sys.platform.python_version()
+    python_version = sys.version
     discord_version = discord.__version__
     uptime = datetime.timedelta(seconds=int(time.time() - bot.start_time))
     await ctx.reply(
