@@ -8,7 +8,14 @@ from mcrcon import MCRcon
 import asyncio
 from discord import Embed
 
+import time
 from random import choice
+
+from datetime import datetime
+import psutil
+
+import os
+import sys
 
 bot = commands.Bot(
     command_prefix=',',
@@ -19,6 +26,8 @@ bot = commands.Bot(
     ),
     case_insensitive=True
 )
+
+bot.start_time = int(time.time())
 
 @bot.event
 async def on_ready():
@@ -176,10 +185,11 @@ async def whitelist_(ctx, *, player: str):
     await log_channel.send(embed=embed)
 
 
-@bot.command(name='custom', help='Runs a custom command')
+@bot.command(name='custom', help='Runs a custom command', alliases=['cmd'])
 @commands.has_role(config.mod)
 async def custom(ctx, *, command: str):
     res = mcr.command(f'{command}')
+    log_channel = await bot.fetch_channel(config.log)
     # print(res)
     await ctx.reply(f'Command ran: `{command}` check {log_channel.mention} for output.')
     embed = Embed(
@@ -190,9 +200,12 @@ async def custom(ctx, *, command: str):
         name=" ",
         value=f"[cmd msg]({ctx.message.jump_url})"
     )
-    log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
+
+"""
+GENERAL COMMANDS
+"""
 
 @bot.command(name="ping", help="Returns bot latency")
 async def ping(ctx):
@@ -203,6 +216,44 @@ async def ping(ctx):
             color=0xffffff
         )
     )
+
+@bot.command(name="uptime", help="Shows bot uptime")
+async def uptime(ctx: commands.Context):
+    uptime = datetime.timedelta(seconds=int(time.time() - bot.start_time))
+    await ctx.reply(
+        embed = discord.Embed(
+            title = "🕒 Uptime",
+            description = f"{uptime.days}days(s), {uptime.seconds//3600}hour(s), {(uptime.seconds//60)%60}minute(s), {uptime.seconds%60}second(s)",
+            color=0xffffff
+        )
+    )
+
+
+
+"""
+PSUTIL COMMANDS
+"""
+
+@bot.command(name="status", help="Shows bot server status")
+async def status(ctx: commands.Context):
+    cpu = psutil.cpu_percent()
+    ram = psutil.virtual_memory().percent
+    disk_percent = psutil.disk_usage('/').percent
+    disk_total = psutil.disk_usage('/').total
+    disk_used = psutil.disk_usage('/').used
+    disk_free = psutil.disk_usage('/').free
+    process = psutil.Process(os.getpid())
+    python_version = sys.platform.python_version()
+    discord_version = discord.__version__
+    uptime = datetime.timedelta(seconds=int(time.time() - bot.start_time))
+    await ctx.reply(
+        embed = discord.Embed(
+            title = "Server Status",
+            description = f"CPU: {cpu}%\nRAM: {ram}%\nDisk: {disk_percent}%\nDisk Total: {disk_total}\nDisk Used: {disk_used}\nDisk Free: {disk_free}\nPython Version: {python_version}\nDiscord Version: {discord_version}\nUptime: {uptime.days}days(s), {uptime.seconds//3600}hour(s), {(uptime.seconds//60)%60}minute(s), {uptime.seconds%60}second(s)",
+            color=0xffffff
+        )
+    )
+
 
 @tasks.loop(minutes=5)
 async def status():
