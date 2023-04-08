@@ -17,6 +17,9 @@ import psutil
 import os
 import sys
 
+from multicraftapi import MulticraftAPI
+import datetime
+
 bot = commands.Bot(
     command_prefix=',',
     intents=discord.Intents.all(),
@@ -57,28 +60,102 @@ def embed_(context: commands.Context, action, logs, terminal):
     )
     return em
 
+def connect() -> MCRcon:
+    mcr = MCRcon(host=config.ip, port=config.port, password=config.password)
+    try:
+        mcr.connect()
+        return mcr
+    except:
+        return None
 
-mcr = MCRcon(host=config.ip, port=config.port, password=config.password)
-mcr.connect()
+################################################################################################################
+#                                                                                                              #
+#                                                                                                              #
+#                                              USING THE                                                       #
+#                                            MULTICRAFT API                                                    #
+#                                         FOR START AND STOP                                                   #
+#                            NOTE: I will recommend using rcon for all possible stuffs                         #
+#                                                                                                              #
+################################################################################################################
+
+client = MulticraftAPI(url=config.api_url, username=config.api_user , api_key=config.api_key)
+
+
+
+@bot.command(name="start",help="Starts the server")
+@commands.has_role(config.mod)
+async def start(ctx):
+    response = client("startServer", config.server_id)
+    if response['success'] == True:
+        await ctx.reply("Server Started!")
+    else:
+        log_channel = await bot.fetch_channel(config.log)
+        res = embed_(ctx, "Start", f"Failed to start server by {str(ctx.author)}", response)
+        await log_channel.send(embed=res)
+        await ctx.reply("Failed to start server! Check logs for more info")
+
+
+@bot.command(name="stop",help="Stops the server")
+@commands.has_role(config.mod)
+async def stop(ctx):
+    response = client("stopServer", config.server_id)
+    if response['success'] == True:
+        await ctx.reply("Server Stoped!")
+    else:
+        log_channel = await bot.fetch_channel(config.log)
+        res = embed_(ctx, "Stop", f"Failed to stop server by {str(ctx.author)}", response)
+        await log_channel.send(embed=res)
+        await ctx.reply("Failed to stop server! Check logs for more info")
+    
+@bot.command(name="restart",help="Restart the server")
+@commands.has_role(config.mod)
+async def restart(ctx):
+    response = client("restartServer", config.server_id)
+    if response['success'] == True:
+        await ctx.reply("Server Restarted!")
+    else:
+        log_channel = await bot.fetch_channel(config.log)
+        res = embed_(ctx, "Retart", f"Failed to restart server by {str(ctx.author)}", response)
+        await log_channel.send(embed=res)
+        await ctx.reply("Failed to restart server! Check logs for more info")
+
+
+
+################################################################################################################
+#                                                                                                              #
+#                                              USING THE                                                       #
+#                                               MC RCON                                                        #
+#                                        FOR EVERYTHING ELSE                                                   #
+#                                                                                                              #
+################################################################################################################
+
+
 
 @bot.command(name='say', help='Sends a message from the server side')
 @commands.has_role(config.mod)
 async def say(ctx, *, message):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'say {message}')
-    # print(res)
+    mcr.disconnect()
+    
     res = embed_(ctx, "Server", f"Sent: `{message}` by {str(ctx.author)}", res)
-    await ctx.message.add_reaction('✅')
+    await ctx.add_reaction('✅')
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=res)
     
+
 
 @bot.command(name='kick', help='Kicks a player from the server')
 @commands.has_role(config.mod)
 async def kick(ctx, player: str, *, reason: str = None):
     if not reason:
         reason = "mf kicked without reason"
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'kick {player} {reason}')
-    # print(res)
+    mcr.disconnect()
+    
     embed = embed_(ctx, "Kick", f"Kicked: by {str(ctx.author)}", res)
     await ctx.reply(f'Kicked! `{player}`')
     log_channel = await bot.fetch_channel(config.log)
@@ -87,10 +164,13 @@ async def kick(ctx, player: str, *, reason: str = None):
 @bot.command(name='ban', help='Bans a player from the server')
 @commands.has_role(config.mod)
 async def ban(ctx, player: str, *, reason: str = None):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     if not reason:
         reason = "mf banned without reason"
+    mcr.disconnect()
     res = mcr.command(f'ban {player} {reason}')
-    # print(res)
+    
     embed = embed_(ctx, "Ban", f"Banned: by {str(ctx.author)}", res)
     await ctx.reply(f'Banned! `{player}`')
     log_channel = await bot.fetch_channel(config.log)
@@ -100,8 +180,11 @@ async def ban(ctx, player: str, *, reason: str = None):
 @bot.command(name='unban', help='Unbans a player from the server')
 @commands.has_role(config.mod)
 async def unban(ctx, player: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'pardon {player}')
-    # print(res)
+    mcr.disconnect()
+    
     embed = embed_(ctx, "Unban", f"Unbanned: by {str(ctx.author)}", res)
     await ctx.reply(f'Unbanned! `{player}`')
     log_channel = await bot.fetch_channel(config.log)
@@ -110,8 +193,11 @@ async def unban(ctx, player: str):
 @bot.command(name='op', help='Gives a player operator status')
 @commands.has_role(config.mod)
 async def op(ctx, *, player: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'op {player}')
-    # print(res)
+    mcr.disconnect()
+    
     embed = embed_(ctx, "Op", f"Opped: by {str(ctx.author)}", res)
     await ctx.reply(f'Gave `{player}` operator status!')
     log_channel = await bot.fetch_channel(config.log)
@@ -120,54 +206,26 @@ async def op(ctx, *, player: str):
 @bot.command(name='deop', help='Takes a player operator status')
 @commands.has_role(config.mod)
 async def deop(ctx, *, player: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'deop {player}')
-    # print(res)
+    mcr.disconnect()
+    
     embed = embed_(ctx, "Deop", f"Deopped: by {str(ctx.author)}", res)
     await ctx.reply(f'Took `{player}` operator status!')
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
 
-# flicko told won't work so I removed
-
-# @bot.command(name='start', help='Starts the server')
-# @commands.has_role(config.mod)
-# async def start(ctx):
-#     res = mcr.command('start')
-#     await ctx.reply('Server starting...')
-#     embed = embed_(ctx, "Start", f"Started: by {str(ctx.author)}", res)
-#     log_channel = await bot.fetch_channel(config.log)
-#     await log_channel.send(embed=embed)
-
-@bot.command(name='stop', help='Stops the server')
-@commands.has_role(config.mod)
-async def stop(ctx):
-    res = mcr.command('stop')
-    # print(res)
-    await ctx.reply('Server stopping...')
-    embed = embed_(ctx, "Stop", f"Stopped: by {str(ctx.author)}", res)
-    log_channel = await bot.fetch_channel(config.log)
-    await log_channel.send(embed=embed)
-
-
-# flicko told won't work so I removed
-
-# @bot.command(name='restart', help='Restarts the server')
-# @commands.has_role(config.mod)
-# async def restart(ctx):
-#     res = mcr.command('restart')
-#     # print(res)
-#     await ctx.reply('Server restarting...')
-#     embed = embed_(ctx, "Restart", f"Restarted: by {str(ctx.author)}", res)
-#     log_channel = await bot.fetch_channel(config.log)
-#     await log_channel.send(embed=embed)
-
 
 @bot.command(name='whitelist', help='Whitelists a player')
 @commands.has_role(config.mod)
 async def whitelist(ctx, *, player: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'whitelist add {player}')
-    # print(res)
+    mcr.disconnect()
+    
     await ctx.reply(f'Whitelisted `{player}`!')
     embed = embed_("Whitelist", f"Whitelisted: by {str(ctx.author)}", res)
     log_channel = await bot.fetch_channel(config.log)
@@ -177,20 +235,26 @@ async def whitelist(ctx, *, player: str):
 @bot.command(name='unlist',help='Remove someone fron whitelist')
 @commands.has_role(config.mod)
 async def whitelist_(ctx, *, player: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'whitelist remove {player}')
-    # print(res)
+    mcr.disconnect()
+    
     await ctx.reply(f'Unlisted `{player}`!')
     embed = embed_("Whitelist", f"Unlisted: by {str(ctx.author)}", res)
     log_channel = await bot.fetch_channel(config.log)
     await log_channel.send(embed=embed)
 
 
-@bot.command(name='custom', help='Runs a custom command', alliases=['cmd'])
+@bot.command(name='custom', help='Runs a custom command', aliases=['cmd'])
 @commands.has_role(config.mod)
 async def custom(ctx, *, command: str):
+    mcr = connect()
+    if not mcr: return await ctx.reply("Can't connect with Rcon!")
     res = mcr.command(f'{command}')
+    mcr.disconnect()
     log_channel = await bot.fetch_channel(config.log)
-    # print(res)
+    
     await ctx.reply(f'Command ran: `{command}` check {log_channel.mention} for output.')
     embed = Embed(
         title="Terminal Output.",
@@ -203,9 +267,13 @@ async def custom(ctx, *, command: str):
     await log_channel.send(embed=embed)
 
 
-"""
-GENERAL COMMANDS
-"""
+
+################################################################################################################
+#                                                                                                              #
+#                                           GENERAL COMMANDS                                                   #
+#                                                                                                              #
+################################################################################################################
+
 
 @bot.command(name="ping", help="Returns bot latency")
 async def ping(ctx):
@@ -229,33 +297,59 @@ async def uptime(ctx: commands.Context):
     )
 
 
-
-"""
-PSUTIL COMMANDS
-"""
+# get usage in gigabytes
 
 @bot.command(name="status", help="Shows bot server status")
 async def status(ctx: commands.Context):
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
     disk_percent = psutil.disk_usage('/').percent
-    disk_total = psutil.disk_usage('/').total
-    disk_used = psutil.disk_usage('/').used
-    disk_free = psutil.disk_usage('/').free
-    process = psutil.Process(os.getpid())
+    disk_total = round(psutil.disk_usage('/').total / 1024 ** 3)
+    disk_used  = round(psutil.disk_usage('/').used / 1024 ** 3)
+    disk_free = round(psutil.disk_usage('/').free / 1024 ** 3)
+    process  = len(psutil.pids())
     python_version = sys.version
     discord_version = discord.__version__
     uptime = datetime.timedelta(seconds=int(time.time() - bot.start_time))
-    await ctx.reply(
-        embed = discord.Embed(
-            title = "Server Status",
-            description = f"CPU: {cpu}%\nRAM: {ram}%\nDisk: {disk_percent}%\nDisk Total: {disk_total}\nDisk Used: {disk_used}\nDisk Free: {disk_free}\nPython Version: {python_version}\nDiscord Version: {discord_version}\nUptime: {uptime.days}days(s), {uptime.seconds//3600}hour(s), {(uptime.seconds//60)%60}minute(s), {uptime.seconds%60}second(s)",
-            color=0xffffff
-        )
+    embed = discord.Embed(
+        description="Server Status",
+        color=0xffffff,
+        timestamp=datetime.datetime.utcnow()
+    )
+    embed.add_field(
+        name="<:CPU:1016016795909488651> CPU",
+        value=f"{cpu}%",
     )
 
+    embed.add_field(
+        name="<:memory:1016016586584363079> Memory",
+        value=f"{ram}%",
+    )
 
-@tasks.loop(minutes=5)
+    embed.add_field(
+        name="<a:disk:1094229488239378573> Disk",
+        value=f"{disk_percent}%\nFree: {disk_free} Gib\nUsed: {disk_used} Gib\nTotal: {disk_total} Gib",
+    )
+    
+    embed.add_field(
+        name="<:python:1016025084789530714> Python Version",
+        value=f"{python_version}",
+    )
+
+    embed.add_field(
+        name="<:discord:1016027358731456582> Pycord Version",
+        value=f"{discord_version}",
+    )
+
+    embed.add_field(
+        name = "<a:uptime:1094230464690147440> Uptime",
+        value = f"{uptime.days}days(s), {uptime.seconds//3600}hour(s), {(uptime.seconds//60)%60}minute(s), {uptime.seconds%60}second(s)",
+    )
+
+    await ctx.reply(embed=embed)
+
+
+@tasks.loop(minutes=10)
 async def status():
     statues = ["Minecraft", "Poopers pooping", "NLuziaf is a god", "myself", "Better than CBV6 😏", "join: tcr.mcserver.us", "The CR SMP",
             "Lava Walker", "Jesus Boots", "Lexionas74 vibing", "for Swas.py", "ports and boats", "Lexi killing Ghast", "Conch", "smp mods", "chunck claimers",
@@ -266,6 +360,5 @@ async def status():
         ]
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=choice(statues)))
 
-# Bob told to change to bot.run instead so I did
 
 bot.run(config.token)
