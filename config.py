@@ -8,5 +8,5 @@ ip="162.33.28.101"
 log=1072453600032342036
 api_user="AyuTheBoss"
 api_url="play.ayuitz.tech/api.php"
-api_token="n3B#s34D93Lj89"
+api_key="n3B#s34D93Lj89"
 server_id="124464"
